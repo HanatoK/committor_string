@@ -27,6 +27,7 @@ ctypedef np.float64_t DTYPE_t
 
 cdef class vcstring:
     cdef str state_assignment
+    cdef str output_prefix
     cdef int num_basis
     cdef double cut_A, cut_B
     cdef double theta_deg, theta, cut
