@@ -13,6 +13,7 @@ Implement the committor-consistent variational string method from trajectories.
 """
 
 import sys
+import os
 import math
 import numpy as np
 cimport numpy as np
@@ -31,7 +32,7 @@ cdef class vcstring:
     cdef double theta_deg, theta, cut
     cdef double ra_A, rb_A, ra_B, rb_B, alpha_deg_A, alpha_deg_B, alpha_A, alpha_B, x0_A, y0_A, x0_B, y0_B
 
-    def __init__(self, str state_assignment, int num_basis, cut_A=None, cut_B=None, theta_deg=None, cut=None, ra_A=None, rb_A=None, ra_B=None, rb_B=None, alpha_deg_A=None, alpha_deg_B=None, x0_A=None, y0_A=None, x0_B=None, y0_B=None):
+    def __init__(self, str state_assignment, int num_basis, cut_A=None, cut_B=None, theta_deg=None, cut=None, ra_A=None, rb_A=None, ra_B=None, rb_B=None, alpha_deg_A=None, alpha_deg_B=None, x0_A=None, y0_A=None, x0_B=None, y0_B=None, output_prefix='output/'):
         """Define basis set
 
         Parameters
@@ -92,6 +93,9 @@ cdef class vcstring:
         x0_B, y0_B : float, default=None
             Ellipse of state B centered at position (x0_B, y0_B),
             must be defined when state_assignment == 'ellipse'
+
+        output_prefix : str, default="output/"
+            the prefix of output files
         
         """
         self.num_basis = num_basis  # Number of basis functions
@@ -116,6 +120,10 @@ cdef class vcstring:
             self.theta_deg = theta_deg  # Degrees
             self.theta = theta_deg * pi / 180.0  # Convert to radians
             self.cut = cut  # Intermediate region cutoff along RC when theta = 0i
+        self.output_prefix = output_prefix
+        dir_name = os.path.dirname(self.output_prefix)
+        if dir_name:
+            os.makedirs(dir_name, exist_ok=True)
 
     cpdef intermediate_region(self):
         """Define intermediate region bounds for a given theta angle and cut off value.
@@ -627,7 +635,7 @@ cdef class vcstring:
             exit()
 
         # Compute matrix/vector elements
-        dat = np.load('output/coeffs_input.npz')
+        dat = np.load(f'{self.output_prefix}coeffs_input.npz')
         D_0 = dat['D_0']
         D_tau = dat['D_tau']
         g_0 = dat['g_0']
@@ -1667,7 +1675,7 @@ cdef class vcstring:
                 gradC_list.append(dC)
                 # else:
                 #     print('\nWARNING: No finite difference computed')
-        np.savez('output/gradC.npz',
+        np.savez(f'{self.output_prefix}gradC.npz',
                  Cp=Cp_list,
                  Cm=Cm_list,
                  gradC=gradC_list,)
@@ -2005,11 +2013,11 @@ cdef class vcstring:
                 if Cnew < target:
                     MC_list.extend([hx, hy, Cnew, z[i][0], z[i][1]])
                     if save == True:
-                        np.savetxt('output/mc.txt', MC_list)
-                        np.savetxt('output/z_new.txt', z)
-                        np.savetxt('output/C_new.txt', [Cnew])
-                        np.savetxt('output/q_new.txt', b)
-                        np.savez('output/coeffs_new.npz',
+                        np.savetxt(f'{self.output_prefix}mc.txt', MC_list)
+                        np.savetxt(f'{self.output_prefix}z_new.txt', z)
+                        np.savetxt(f'{self.output_prefix}C_new.txt', [Cnew])
+                        np.savetxt(f'{self.output_prefix}q_new.txt', b)
+                        np.savez(f'{self.output_prefix}coeffs_new.npz',
                                  b=b,
                                  D_0=D_0,
                                  D_tau=D_tau,
@@ -2201,10 +2209,10 @@ cdef class vcstring:
                 if Cnew < target:
                     MC_list.extend([hx, hy, Cnew, z[i][0], z[i][1], z[ii][0], z[ii][1]])
                     if save == True:
-                        np.savetxt('output/mc.txt', MC_list)
-                        np.savetxt('output/z_new.txt', z)
-                        np.savetxt('output/C_new.txt', [Cnew])
-                        np.savez('output/coeffs_new.npz',
+                        np.savetxt(f'{self.output_prefix}mc.txt', MC_list)
+                        np.savetxt(f'{self.output_prefix}z_new.txt', z)
+                        np.savetxt(f'{self.output_prefix}C_new.txt', [Cnew])
+                        np.savez(f'{self.output_prefix}coeffs_new.npz',
                                  b=b,
                                  D_0=D_0,
                                  D_tau=D_tau,
